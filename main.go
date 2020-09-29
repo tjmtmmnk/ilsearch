@@ -31,14 +31,15 @@ func main() {
 		SearchMode: FirstMatch,
 		Directory:  "./",
 	}
-	results, err := Search("new", option)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	for _, r := range results {
-		list.AddItem(r, "", 0, nil)
-	}
+
+	searchBar.SetChangedFunc(func(text string) {
+		results, err := Search(text, option)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		UpdateList(list, results)
+	})
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(searchBar, 0, 1, true).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
