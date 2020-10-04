@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	context       *Context
 	app           *tview.Application
 	list          *tview.List
 	searchBar     *tview.InputField
@@ -18,6 +19,7 @@ var (
 )
 
 func main() {
+	context = NewContext()
 	s, e := tcell.NewScreen()
 	if e != nil {
 		os.Exit(1)
@@ -78,6 +80,14 @@ func main() {
 			panic(err)
 		}
 		preview.Clear().SetText(text)
+	})
+
+	list.SetSelectedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
+		item := searchResults[index]
+		if index != item.index {
+			log.Fatal("not match index")
+		}
+		OpenFile(context.workDir, item.fileName, item.lineNum)
 	})
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).
