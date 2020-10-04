@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -16,7 +18,14 @@ var (
 )
 
 func main() {
-	app = tview.NewApplication()
+	s, e := tcell.NewScreen()
+	if e != nil {
+		os.Exit(1)
+	}
+	if e := s.Init(); e != nil {
+		os.Exit(1)
+	}
+	app = tview.NewApplication().SetScreen(s)
 	list = tview.NewList().ShowSecondaryText(false)
 	//pages := tview.NewPages()
 
@@ -25,7 +34,10 @@ func main() {
 		SetFieldBackgroundColor(tcell.ColorBlack).
 		SetFieldTextColor(tcell.ColorWhite)
 
-	preview = tview.NewTextView()
+	preview = tview.NewTextView().
+		SetDynamicColors(true).
+		SetScrollable(true).
+		SetRegions(true)
 
 	option := &Option{
 		SearchMode: FirstMatch,
@@ -40,16 +52,29 @@ func main() {
 		}
 		UpdateList(list, results)
 	})
+
+	list.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
+		currentItemText, _ := list.GetItemText(index)
+		sp := strings.Split(currentItemText, ":")
+		if len(sp) != 3 {
+			panic("don't match format")
+		}
+		fileName := sp[0]
+		lineNum, _ := strconv.Atoi(sp[1])
+
+		text, err := GetPreviewContent(s, fileName, lineNum, "OneHalfDark")
+		text = tview.TranslateANSI(text)
+		if err != nil {
+			panic(err)
+		}
+		preview.Clear().SetText(text)
+	})
+
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(searchBar, 0, 1, true).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(list, 0, 1, false).
-			AddItem(preview.SetBorder(true), 0, 1, false), 0, 10, false)
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+			AddItem(preview, 0, 1, false), 0, 10, false)
 
 	if err := app.SetRoot(flex, true).EnableMouse(true).Run(); err != nil {
 		panic(err)

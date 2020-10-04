@@ -7,21 +7,19 @@ import (
 
 func Search(s string, option *Option) ([]string, error) {
 	var (
-		cmd  string
-		args []string
+		cmd []string
 	)
 	switch option.SearchMode {
 	case Regex:
 	case WordMatch:
 	case FirstMatch:
-		cmd = "git"
-		args = []string{
-			"grep", s,
+		cmd = []string{
+			"git", "grep", "-Hn", s,
 		}
 	case FuzzyFind:
 	}
 
-	result, err := exec.Command(cmd, args...).Output()
+	result, err := exec.Command(cmd[0], cmd[1:]...).Output()
 	if err != nil {
 		return []string{}, err
 	}
