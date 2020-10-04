@@ -2,10 +2,18 @@ package main
 
 import (
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
-func Search(s string, option *Option) ([]string, error) {
+type SearchResult struct {
+	index    int
+	lineNum  int
+	fileName string
+	text     string
+}
+
+func Search(s string, option *Option) ([]SearchResult, error) {
 	var (
 		cmd []string
 	)
@@ -19,9 +27,25 @@ func Search(s string, option *Option) ([]string, error) {
 	case FuzzyFind:
 	}
 
-	result, err := exec.Command(cmd[0], cmd[1:]...).Output()
+	out, err := exec.Command(cmd[0], cmd[1:]...).Output()
 	if err != nil {
-		return []string{}, err
+		return []SearchResult{}, err
 	}
-	return strings.Split(string(result), "\n"), nil
+
+	var results []SearchResult
+	for i, result := range strings.Split(string(out), "\n") {
+		splittedResult := strings.Split(result, ":")
+		if len(splittedResult) < 2 {
+			continue
+		}
+		fileName := splittedResult[0]
+		lineNum, _ := strconv.Atoi(splittedResult[1])
+		results = append(results, SearchResult{
+			index:    i,
+			lineNum:  lineNum,
+			fileName: fileName,
+			text:     result,
+		})
+	}
+	return results, nil
 }

@@ -2,19 +2,19 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
 
 var (
-	app       *tview.Application
-	list      *tview.List
-	searchBar *tview.InputField
-	preview   *tview.TextView
+	app           *tview.Application
+	list          *tview.List
+	searchBar     *tview.InputField
+	preview       *tview.TextView
+	searchResults []SearchResult
 )
 
 func main() {
@@ -36,8 +36,7 @@ func main() {
 
 	preview = tview.NewTextView().
 		SetDynamicColors(true).
-		SetScrollable(true).
-		SetRegions(true)
+		SetScrollable(true)
 
 	option := &Option{
 		SearchMode: FirstMatch,
@@ -45,24 +44,35 @@ func main() {
 	}
 
 	searchBar.SetChangedFunc(func(text string) {
-		results, err := Search(text, option)
+		var err error
+		searchResults, err = Search(text, option)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		UpdateList(list, results)
+		var resultTexts []string
+		for _, result := range searchResults {
+			resultTexts = append(resultTexts, result.text)
+		}
+		UpdateList(list, resultTexts)
+	})
+
+	searchBar.SetDoneFunc(func(key tcell.Key) {
+		switch key {
+		case tcell.KeyEnter:
+			app.SetFocus(list)
+		case tcell.KeyEsc:
+			os.Exit(0)
+		}
 	})
 
 	list.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
-		currentItemText, _ := list.GetItemText(index)
-		sp := strings.Split(currentItemText, ":")
-		if len(sp) != 3 {
-			panic("don't match format")
+		item := searchResults[index]
+		if index != item.index {
+			log.Fatal("not match index")
 		}
-		fileName := sp[0]
-		lineNum, _ := strconv.Atoi(sp[1])
 
-		text, err := GetPreviewContent(s, fileName, lineNum, "OneHalfDark")
+		text, err := GetPreviewContent(s, item.fileName, item.lineNum, "OneHalfDark")
 		text = tview.TranslateANSI(text)
 		if err != nil {
 			panic(err)
