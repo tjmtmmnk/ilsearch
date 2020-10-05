@@ -22,10 +22,10 @@ func main() {
 	context = NewContext()
 	s, e := tcell.NewScreen()
 	if e != nil {
-		os.Exit(1)
+		log.Fatal("screen error")
 	}
 	if e := s.Init(); e != nil {
-		os.Exit(1)
+		log.Fatal("screen init error")
 	}
 	app = tview.NewApplication().SetScreen(s)
 	list = tview.NewList().ShowSecondaryText(false)
@@ -41,7 +41,7 @@ func main() {
 		SetScrollable(true)
 
 	option := &Option{
-		SearchMode: FirstMatch,
+		SearchMode: Regex,
 		Directory:  "./",
 	}
 
@@ -50,7 +50,7 @@ func main() {
 		searchResults, err = Search(text, option)
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			log.Fatal("search error")
 		}
 		var resultTexts []string
 		for _, result := range searchResults {

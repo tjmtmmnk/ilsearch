@@ -2,6 +2,7 @@ package main
 
 import (
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -13,16 +14,30 @@ type SearchResult struct {
 	text     string
 }
 
-func Search(s string, option *Option) ([]SearchResult, error) {
+func isValidQuery(q string) bool {
+	matched, err := regexp.Match(`\\$`, []byte(q))
+	if err != nil {
+		return false
+	}
+	return !matched
+}
+
+func Search(q string, option *Option) ([]SearchResult, error) {
 	var (
 		cmd []string
 	)
+	if !isValidQuery(q) {
+		return []SearchResult{}, nil
+	}
 	switch option.SearchMode {
 	case Regex:
+		cmd = []string{
+			"git", "grep", "-EHn", q,
+		}
 	case WordMatch:
 	case FirstMatch:
 		cmd = []string{
-			"git", "grep", "-Hn", s,
+			"git", "grep", "-Hn", q,
 		}
 	case FuzzyFind:
 	}
