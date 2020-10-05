@@ -63,7 +63,7 @@ func main() {
 		case tcell.KeyEnter:
 			app.SetFocus(list)
 		case tcell.KeyEsc:
-			os.Exit(0)
+			app.Stop()
 		}
 	})
 

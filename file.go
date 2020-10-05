@@ -48,5 +48,5 @@ func OpenFile(workDir, fileName string, lineNum int) {
 		log.Fatal("can't open file")
 	}
 
-	os.Exit(0)
+	app.Stop()
 }
