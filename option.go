@@ -6,6 +6,7 @@ const (
 	Regex Mode = iota
 	FirstMatch
 	WordMatch
+	WordMatchIgnoreCase
 	FuzzyFind
 )
 

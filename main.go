@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -41,7 +40,7 @@ func main() {
 		SetScrollable(true)
 
 	option := &Option{
-		SearchMode: Regex,
+		SearchMode: WordMatch,
 		Directory:  "./",
 	}
 
@@ -88,6 +87,10 @@ func main() {
 			log.Fatal("not match index")
 		}
 		OpenFile(context.workDir, item.fileName, item.lineNum)
+	})
+
+	list.SetDoneFunc(func() {
+		app.SetFocus(searchBar)
 	})
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).

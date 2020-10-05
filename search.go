@@ -15,11 +15,12 @@ type SearchResult struct {
 }
 
 func isValidQuery(q string) bool {
+	empty := q == ""
 	matched, err := regexp.Match(`\\$`, []byte(q))
 	if err != nil {
 		return false
 	}
-	return !matched
+	return !empty && !matched
 }
 
 func Search(q string, option *Option) ([]SearchResult, error) {
@@ -35,6 +36,13 @@ func Search(q string, option *Option) ([]SearchResult, error) {
 			"git", "grep", "-EHn", q,
 		}
 	case WordMatch:
+		cmd = []string{
+			"git", "grep", "-wHn", q,
+		}
+	case WordMatchIgnoreCase:
+		cmd = []string{
+			"git", "grep", "-wiHn", q,
+		}
 	case FirstMatch:
 		cmd = []string{
 			"git", "grep", "-Hn", q,
@@ -43,6 +51,10 @@ func Search(q string, option *Option) ([]SearchResult, error) {
 	}
 
 	out, err := exec.Command(cmd[0], cmd[1:]...).Output()
+	if len(out) == 0 {
+		return []SearchResult{}, nil
+	}
+
 	if err != nil {
 		return []SearchResult{}, err
 	}
