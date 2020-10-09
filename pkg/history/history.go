@@ -1,4 +1,4 @@
-package main
+package history
 
 import (
 	"encoding/json"
@@ -20,7 +20,7 @@ type History struct {
 	LastQuery        string   `json:"last_query"`
 }
 
-type HistoryQuery struct {
+type Query struct {
 	Key string
 	Val string
 }
@@ -36,7 +36,7 @@ func getFilePath() string {
 	return homeDir + DIRECTORY + "/" + FILENAME
 }
 
-func InitHistory() error {
+func Init() error {
 	usr, err := user.Current()
 	if err != nil {
 		return err
@@ -79,8 +79,8 @@ func updateHistory(history *History, key, s string) (*History, error) {
 	return history, nil
 }
 
-func writeHistories(queries []HistoryQuery) error {
-	history, err := readHistory()
+func WriteHistories(queries []Query) error {
+	history, err := ReadHistory()
 	if err != nil {
 		return err
 	}
@@ -102,11 +102,11 @@ func writeHistories(queries []HistoryQuery) error {
 	return nil
 }
 
-func writeHistory(query HistoryQuery) error {
-	return writeHistories([]HistoryQuery{query})
+func WriteHistory(query Query) error {
+	return WriteHistories([]Query{query})
 }
 
-func readHistory() (*History, error) {
+func ReadHistory() (*History, error) {
 	filePath := getFilePath()
 	bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {

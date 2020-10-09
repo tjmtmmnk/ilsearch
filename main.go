@@ -98,6 +98,17 @@ func main() {
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(list, 0, 1, false).
 			AddItem(preview, 0, 1, false), 0, 10, false)
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch key := event.Key(); {
+		case key == tcell.KeyCtrlS:
+			pages.SwitchToPage("tree")
+		case key == tcell.KeyRune || key == tcell.KeyBackspace || key == tcell.KeyBackspace2:
+			app.SetFocus(searchBar)
+		case key == tcell.KeyDown && searchBar.HasFocus():
+			app.SetFocus(list)
+		}
+		return event
+	})
 
 	if err := app.SetRoot(flex, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
