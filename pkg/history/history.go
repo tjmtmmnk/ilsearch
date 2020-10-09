@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	DIRECTORY = "/.ilsearch"
-	FILENAME  = "ilsearch_history.json"
+	Directory      = "/.ilsearch"
+	FileName       = "ilsearch_history.json"
+	MaxDirectories = 5
 )
 
 var homeDir string
@@ -33,7 +34,7 @@ func newHistory() *History {
 }
 
 func getFilePath() string {
-	return homeDir + DIRECTORY + "/" + FILENAME
+	return homeDir + Directory + "/" + FileName
 }
 
 func Init() error {
@@ -42,7 +43,7 @@ func Init() error {
 		return err
 	}
 	homeDir = usr.HomeDir
-	path := homeDir + DIRECTORY
+	path := homeDir + Directory
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err := os.Mkdir(path, 0744)
 
@@ -64,15 +65,15 @@ func Init() error {
 	return nil
 }
 
-func updateHistory(history *History, key, s string) (*History, error) {
-	switch key {
+func updateHistory(history *History, query Query) (*History, error) {
+	switch query.Key {
 	case "FocusDirectories":
-		if len(history.FocusDirectories) > 5 {
+		if len(history.FocusDirectories) > MaxDirectories-1 {
 			history.FocusDirectories = history.FocusDirectories[1:]
 		}
-		history.FocusDirectories = append(history.FocusDirectories, s)
+		history.FocusDirectories = append(history.FocusDirectories, query.Val)
 	case "LastQuery":
-		history.LastQuery = s
+		history.LastQuery = query.Val
 	default:
 		return nil, errors.New("invalid json key")
 	}
@@ -87,7 +88,7 @@ func WriteHistories(queries []Query) error {
 
 	var updatedHistory *History
 	for _, q := range queries {
-		updatedHistory, err = updateHistory(history, q.Key, q.Val)
+		updatedHistory, err = updateHistory(history, q)
 		if err != nil {
 			return err
 		}
