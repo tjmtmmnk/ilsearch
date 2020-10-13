@@ -1,6 +1,7 @@
 package main
 
 type Mode int
+type Command int
 
 const (
 	Regex Mode = iota
@@ -10,7 +11,14 @@ const (
 	FuzzyFind
 )
 
+const (
+	GitGrep Command = iota
+	RipGrep
+	Agrep
+)
+
 type Option struct {
 	SearchMode Mode
 	Directory  string
+	Command    Command
 }

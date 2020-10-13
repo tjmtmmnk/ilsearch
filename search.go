@@ -1,10 +1,14 @@
 package main
 
 import (
+	"log"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/alessio/shellescape.v1"
 )
 
 type SearchResult struct {
@@ -48,6 +52,12 @@ func Search(q string, option *Option) ([]SearchResult, error) {
 			"git", "grep", "-Hn", q,
 		}
 	case FuzzyFind:
+		target := filepath.Join(context.workDir, "*")
+		// to use glob pattern
+		c := "agrep -n " + shellescape.Quote(q) + " " + target
+		cmd = []string{
+			"/bin/sh", "-c", c,
+		}
 	}
 
 	out, err := exec.Command(cmd[0], cmd[1:]...).Output()
@@ -61,18 +71,32 @@ func Search(q string, option *Option) ([]SearchResult, error) {
 
 	var results []SearchResult
 	for i, result := range strings.Split(string(out), "\n") {
-		splittedResult := strings.Split(result, ":")
-		if len(splittedResult) < 2 {
-			continue
+		ignore, fileName, lineNum := splitResult(result, option.Command)
+		if !ignore {
+			results = append(results, SearchResult{
+				index:    i,
+				lineNum:  lineNum,
+				fileName: fileName,
+				text:     result,
+			})
 		}
-		fileName := splittedResult[0]
-		lineNum, _ := strconv.Atoi(splittedResult[1])
-		results = append(results, SearchResult{
-			index:    i,
-			lineNum:  lineNum,
-			fileName: fileName,
-			text:     result,
-		})
 	}
 	return results, nil
+}
+
+func splitResult(result string, command Command) (ignore bool, fileName string, lineNum int) {
+	splitted := strings.Split(result, ":")
+	if len(splitted) < 2 {
+		ignore = true
+		return
+	}
+	switch command {
+	case GitGrep:
+		fileName = splitted[0]
+		lineNum, _ = strconv.Atoi(splitted[1])
+	case Agrep:
+		fileName = splitted[0]
+		lineNum, _ = strconv.Atoi(strings.Replace(splitted[1], " ", "", -1))
+	}
+	return
 }
