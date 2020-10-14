@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -60,13 +59,9 @@ func Search(q string, option *Option) ([]SearchResult, error) {
 		}
 	}
 
-	out, err := exec.Command(cmd[0], cmd[1:]...).Output()
+	out, _ := exec.Command(cmd[0], cmd[1:]...).Output()
 	if len(out) == 0 {
 		return []SearchResult{}, nil
-	}
-
-	if err != nil {
-		return []SearchResult{}, err
 	}
 
 	var results []SearchResult
